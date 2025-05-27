@@ -27,16 +27,20 @@ class ClangdLanguageServer(LanguageServer):
     Also make sure compile_commands.json is created at root of the source directory. Check clangd test case for example.
     """
 
-    def __init__(self, config: MultilspyConfig, logger: MultilspyLogger, repository_root_path: str):
+    def __init__(self, config: MultilspyConfig, logger: MultilspyLogger, repository_root_path: str, compile_commands_dir: str = None, clangd_executable_path: str = None):
         """
         Creates a ClangdLanguageServer instance. This class is not meant to be instantiated directly. Use LanguageServer.create() instead.
         """
-        clangd_executable_path = self.setup_runtime_dependencies(logger, config)
+        if clangd_executable_path is None:
+            clangd_executable_path = self.setup_runtime_dependencies(logger, config)
+        cmd = clangd_executable_path
+        if compile_commands_dir:
+            cmd = f"{cmd} --compile-commands-dir {compile_commands_dir}"
         super().__init__(
             config,
             logger,
             repository_root_path,
-            ProcessLaunchInfo(cmd=clangd_executable_path, cwd=repository_root_path),
+            ProcessLaunchInfo(cmd=cmd, cwd=repository_root_path),
             "cpp",
         )
         self.server_ready = asyncio.Event()
